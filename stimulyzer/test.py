@@ -46,8 +46,8 @@ def main():
     #draw.ellipse((0, 0, 180, 180), fill = 'white', outline ='blue')
     # draw.rectangle(((20,20),(40,40)), fill = 'white', outline = 'blue')
     #draw.rectangle(((0, 00), (100, 100)), fill="black")
+#       image.show();
 
- #       image.show();
         image.save(base_filepath + stim_file_name)
 
         # delete to save memory
