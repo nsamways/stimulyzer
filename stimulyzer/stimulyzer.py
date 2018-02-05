@@ -62,6 +62,9 @@ def get_configuration( conf_filename = "config.ini" ):
 #     print(cfg.items('Base Parameters')) 
 #     print(cfg.get('Items1','Colour'))
 
+    # get the base section
+    for name in cfg.options()
+
     for each_section in (all_cfg_sections):
         print(" processing section:" + each_section)
         
