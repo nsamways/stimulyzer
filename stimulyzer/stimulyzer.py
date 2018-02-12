@@ -9,14 +9,13 @@ from PIL import Image, ImageDraw
 
 from ConfigParser import ConfigParser
 
-import random
+import random, glob 
 
 def main():
 
     # read in the config file as passed by CLAs
     ( base_config, object_list ) = get_configuration()
-    
-    
+        
     
     
     # calculate the number of loci, total number of objects etc.
