@@ -14,18 +14,25 @@ import random, glob
 def main():
 
     # read in the config file as passed by CLAs
-    ( base_config, object_list ) = get_configuration()
-        
+    ( base_config, distractor_list, target_parameters ) = get_configuration()   
+    
+    # calculate the size of the matrix, the offsets, and 
     
     
+    stim_size = 
     # calculate the number of loci, total number of objects etc.
+    
+    # create the shape and 
     
     
     # Main loop for creation of all images        
     for j in range(set_size):
 
-        # create the 'canvas'
+        # create the 'canvas' and make it global
+        
         image = Image.new( "RGB" , stim_size, background_colour )
+        global image
+        
         stim = ImageDraw.Draw(image);   
         
         # loop through for each individual stimulus
@@ -52,17 +59,26 @@ def get_configuration( conf_filename = "config.ini" ):
 
 # set up the members
     
+    # set up config paresr and read in config items
     cfg = ConfigParser()
     cfg.read( conf_filename )
     
-    # get all of the different sections    
-     
-    all_cfg_sections = cfg.sections()
+    # get the different sections      
+    all_sections = cfg.sections()
 #     print(cfg.items('Base Parameters')) 
 #     print(cfg.get('Items1','Colour'))
 
     # get the base section
-    for name in cfg.options()
+    for section_name in all_sections:
+        
+        if ("base_parameters" in section_name):
+            # set the base parameters
+            
+        elif ("distractor" in section_name):
+            # set distractor parameters
+        elif ("target" in section_name):
+            # set the target parameters
+            
 
     for each_section in (all_cfg_sections):
         print(" processing section:" + each_section)
@@ -89,17 +105,11 @@ def get_configuration( conf_filename = "config.ini" ):
     shape_1_colour = cfg.get('Items1','Colour')
     fill = cfg.getboolean('Items1', 'Fill')
     
-return(base_params, objects)
+return(base_params, distractors, target_params)
 
-def get_base_parameters():
 
 def paint_polygons():
     
-return()
-
-def paint_circles():
-    
-return()
 
 
 #         # create a random coordinate bounded by min and max
