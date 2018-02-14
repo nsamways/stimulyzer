@@ -16,6 +16,12 @@ def main():
     # read in the config file as passed by CLAs
     ( base_config, distractor_list, target_parameters ) = get_configuration()   
     
+    
+    print("Base config:" + str(base_config))
+    
+    exit()
+    
+    
     # convert some of the list to sensible variable names for easier handling
     stim_width = int(base_config["Width"])
     stim_height = int(base_config["Height"])
@@ -45,7 +51,7 @@ def main():
     objects_per_width = floor( max_cell_width / stim_width )
     objects_per
     
-    objects_per_height = 
+    objects_per_height = 2
     
     # create the shape and coordinate matrix
     shape_matrix = []
@@ -81,7 +87,7 @@ def main():
         
         # loop through for each individual stimulus
         for i in range(object_number):
-        
+            pass
         
         # set the filename and save the file to the appropriate path / name based on base name and current iteration        
         stim_file_name = str(base_config["Base Name"]) + "_" + str(j) + ".jpg" 
@@ -97,10 +103,6 @@ def main():
     print("Done")
     
     
-if ( __name__ == "__main__"):
-    
-    main();
-
 def get_configuration( conf_filename = "config.ini" ):
 
     # set up the distractor as a list as this will contain the multiple dicts
@@ -118,54 +120,71 @@ def get_configuration( conf_filename = "config.ini" ):
     # get the base section
     for section_name in all_sections:
         
-        if ("base_parameters" in section_name):
+        if ("Base Parameters" in section_name):
             # set the base parameters
-            for (pairs in cfg.sections(section_name)):
+            for all_items in cfg.items(section_name):
                 # append each pair to the dict
-                base_params[]
+                for pairs in all_items:
+                    base_params[pairs[0]] = pairs[1]
             
             
         elif ("Distractor" in section_name):
             # set distractor parameters
-            
+            # this is less easy because there could be multiple distractors and they need to be pushed to a list
+            curr_distractor_dict = {}
+             
+            # set the current distractor
+            for all_items in cfg.items(section_name):
+                # append each pair to the dict
+                for pairs in all_items:
+                    print all_items
+                    exit()
+                    curr_distractor_dict[pairs[0]] = pairs[1]           
+             
             # pop the current distractor on to the list
-            
-            
+            distractors.append(curr_distractor_dict)
+            # delete the temp dict
+            del curr_distractor_dict
+             
         elif ("Target" in section_name):
             # set the target parameters
+            for all_items in cfg.items(section_name):
+                # append each pair to the dict
+                for pairs in all_items:
+                    base_params[pairs[0]] = pairs[1]
             
 ### Use: all_items = cfg.items(section_name) to give list of lists.  Then convert to dict with: for pairs in all_items: dict[pairs[0]] = pairs[1] 
             
-return(base_params, distractors, target_params)
+    return(base_params, distractors, target_params)
 
 
 
-def paint_polygons(x_coord, y_coord, shape_info):
-    
-    # set up the vertex list
-    vertices = []
-    
-    # get some 
-    poly_radius = int ( shape_info[  ])
-    
-    # create the list of vertices
-    for ( i in range (int(shape_info["Vertices"]))):
-        # create the points as pairs
-        
-        # x coord
-        xi = x_coord + math.sin()
-        yi = y_coord + math.cos()
-        
-        point_pair = [xi, yi]
-        
-        # push new point on to vertex list
-        vertices.append( point_pair )
-
-    # draw this polygon on to the stimulus image
-    
-    stim.polygon()
-        
-return()
+# def paint_polygons(x_coord, y_coord, shape_info):
+#     
+#     # set up the vertex list
+#     vertices = []
+#     
+#     # get some 
+#     poly_radius = int ( shape_info[  ])
+#     
+#     # create the list of vertices
+#     for ( i in range (int(shape_info["Vertices"]))):
+#         # create the points as pairs
+#         
+#         # x coord
+#         xi = x_coord + math.sin()
+#         yi = y_coord + math.cos()
+#         
+#         point_pair = [xi, yi]
+#         
+#         # push new point on to vertex list
+#         vertices.append( point_pair )
+# 
+#     # draw this polygon on to the stimulus image
+#     
+#     stim.polygon()
+#         
+# return()
 #         # create a random coordinate bounded by min and max
 #             x1 = random.randint(0, (width - object_size));
 #             x2 = x1 + object_size
@@ -178,3 +197,6 @@ return()
 #             else:
 #                 stim.rectangle(((x1, y1),(x2,y2)), outline = shape_1_colour)
 
+if ( __name__ == "__main__"):
+    
+    main();
