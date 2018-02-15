@@ -9,7 +9,7 @@ from PIL import Image, ImageDraw
 
 from ConfigParser import ConfigParser
 
-import random, glob 
+import random, glob, math 
 
 def main():
 
@@ -26,12 +26,15 @@ def main():
     # convert some of the dict items to their proper type, and sensible variable names for easier handling
     stim_width = int(base_config["width"])
     stim_height = int(base_config["height"])
-#    stim_set_size = int(base_config["Number of Stimuli"])
+    stim_set_size = int(base_config["number of stimuli"])
+    
+    # determine some variables
+    stim_size = [stim_width, stim_height]
             
     # calculate the size of the matrix, the offsets etc.
     
     
-    # first calculate the maximum cell size, based on the largest size of distractor plus padding
+    # first calculate the maximum cell size, based on the largest size of object plus padding
     
     maximum_stim_radius = 0;
     
@@ -44,16 +47,24 @@ def main():
     
     if int(target_parameters["radius"]) > maximum_stim_radius:
         maximum_stim_radius = int(target_parameters["radius"])
-   
+    
+    max_cell_height = max_cell_width = maximum_stim_radius + int(base_config["padding"])
+    
     print("Max stim radius:" + str(maximum_stim_radius))   
-    exit()
+    print("Max cell height:" + str(max_cell_width))   
+
+
     # calculate the number of loci, based on total number of objects etc.
     
-    objects_per_width = floor( max_cell_width / stim_width )
-    objects_per
     
-    objects_per_height = 2
     
+    objects_per_width = math.floor( stim_width / max_cell_width)
+    objects_per_height = math.floor( stim_height / max_cell_height )
+    
+    print("Objects per width:" + str(objects_per_width))
+    print("Objects per height:" + str(objects_per_height))
+    
+    exit()
     # create the shape and coordinate matrix
     shape_matrix = []
     coord_matrix = []
@@ -64,10 +75,10 @@ def main():
     # Main loop for creation of all stimuli        
     for j in range(stim_set_size):
         # we do this for a single stimuli (image)
-
+        
+        global stim
         # create the 'canvas' and make it global so that the other functions can draw on it
         image = Image.new( "RGB" , stim_size, background_colour )
-        global image
         stim = ImageDraw.Draw(image)
 
 
