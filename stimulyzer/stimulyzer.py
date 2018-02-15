@@ -16,36 +16,37 @@ def main():
     # read in the config file as passed by CLAs
     ( base_config, distractor_list, target_parameters ) = get_configuration()   
     
+#     print("Base config:" + str(base_config) +"\n")
+#     print("Target config:" + str(target_parameters) + "\n")
+#     for dissers in distractor_list:
+#         print("New Distractor:\n")
+#         print(str(dissers))
     
-    print("Base config:" + str(base_config))
     
-    exit()
-    
-    
-    # convert some of the list to sensible variable names for easier handling
-    stim_width = int(base_config["Width"])
-    stim_height = int(base_config["Height"])
-    stim_set_size = int(base_config["Number of Stimuli"])
-    
-        
+    # convert some of the dict items to their proper type, and sensible variable names for easier handling
+    stim_width = int(base_config["width"])
+    stim_height = int(base_config["height"])
+#    stim_set_size = int(base_config["Number of Stimuli"])
+            
     # calculate the size of the matrix, the offsets etc.
+    
+    
     # first calculate the maximum cell size, based on the largest size of distractor plus padding
     
     maximum_stim_radius = 0;
     
     for shapes in distractor_list:
         # get the size of current distractor 
-        cur_size = int(shapes["Radius"])
+        cur_size = int(shapes["radius"])
 
         if  cur_size > maximum_stim_radius:
             maximum_stim_radius = cur_size
     
-    if int(target_parameters["Radius"]) > cur_size:
-        cur_size = int(target_parameters["Radius"])
-    
-    
-    
-    
+    if int(target_parameters["radius"]) > maximum_stim_radius:
+        maximum_stim_radius = int(target_parameters["radius"])
+   
+    print("Max stim radius:" + str(maximum_stim_radius))   
+    exit()
     # calculate the number of loci, based on total number of objects etc.
     
     objects_per_width = floor( max_cell_width / stim_width )
@@ -67,7 +68,6 @@ def main():
         # create the 'canvas' and make it global so that the other functions can draw on it
         image = Image.new( "RGB" , stim_size, background_colour )
         global image
-        
         stim = ImageDraw.Draw(image)
 
 
@@ -124,10 +124,9 @@ def get_configuration( conf_filename = "config.ini" ):
             # set the base parameters
             for all_items in cfg.items(section_name):
                 # append each pair to the dict
-                for pairs in all_items:
-                    base_params[pairs[0]] = pairs[1]
-            
-            
+                name, value = all_items
+                base_params[name] = value
+                
         elif ("Distractor" in section_name):
             # set distractor parameters
             # this is less easy because there could be multiple distractors and they need to be pushed to a list
@@ -136,10 +135,8 @@ def get_configuration( conf_filename = "config.ini" ):
             # set the current distractor
             for all_items in cfg.items(section_name):
                 # append each pair to the dict
-                for pairs in all_items:
-                    print all_items
-                    exit()
-                    curr_distractor_dict[pairs[0]] = pairs[1]           
+                name, value = all_items
+                curr_distractor_dict[name] = value           
              
             # pop the current distractor on to the list
             distractors.append(curr_distractor_dict)
@@ -150,11 +147,9 @@ def get_configuration( conf_filename = "config.ini" ):
             # set the target parameters
             for all_items in cfg.items(section_name):
                 # append each pair to the dict
-                for pairs in all_items:
-                    base_params[pairs[0]] = pairs[1]
-            
-### Use: all_items = cfg.items(section_name) to give list of lists.  Then convert to dict with: for pairs in all_items: dict[pairs[0]] = pairs[1] 
-            
+                name, value = all_items
+                target_params[name] = value     
+                       
     return(base_params, distractors, target_params)
 
 
