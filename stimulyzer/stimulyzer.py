@@ -10,9 +10,6 @@ from PIL import Image, ImageDraw
 from ConfigParser import ConfigParser
 
 import random, glob, math 
-from docutils.utils.math.tex2unichar import space
-
-
 
 
 def main():
