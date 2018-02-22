@@ -9,38 +9,48 @@ from PIL import Image, ImageDraw
 
 from ConfigParser import ConfigParser
 
-import random, glob, math 
+import random, glob, math, os, csv 
 
 
 def main():
 
     # toggle debugging mode
+    global draw_AOI_boxes
     debugging = False
-
-    # set some vars
+    draw_AOI_boxes = True
+    draw_on_grid = True
+    
+    # set some lists
     total_objects_count = []
     total_distractors_count = []
     
     # read in the config file as passed by CLAs
     ( base_config, distractor_list, target_parameters ) = get_configuration()   
-    
-    # check if there is a target present
-    if bool(target_parameters):
-        if int(target_parameters["number"]) > 0:
-            target_present = True
-            print ("Target present")
-        else:
-            target_present = False            
-    else:
-        target_present = False
-    
-    # convert some of the dict items to their proper type, and sensible variable names for easier handling
+
+    # convert some of the dict items to their proper type, and give sensible variable names for easier handling
     stim_width = int(base_config["width"])
     stim_height = int(base_config["height"])
     stim_set_size = int(base_config["number of stimuli"])
     spacer = int(base_config["padding"])
     base_filepath = str(base_config["directory path"])
+
+    # open a file for writing out the AOI information
+    outfile_name = open((base_filepath + str(base_config["base name"]) + ".csv"),'wb') 
+    outfile_handle = csv.writer(outfile_name)
+
+    # set up the headers
+    row_headers = ["stim_file_name","name","min_x","min_y","max_x","max_y"]
+    outfile_handle.writerow(row_headers)
     
+    # check if there is a target present
+    if bool(target_parameters):
+        if int(target_parameters["number"]) > 0:
+            target_present = True
+        else:
+            target_present = False            
+    else:
+        target_present = False
+        
     # set some variables
     stim_size = [stim_width, stim_height]
     maximum_stim_radius = 0 
@@ -66,10 +76,6 @@ def main():
         # check if the radius is bigger than targets
         if int(target_parameters["radius"]) > maximum_stim_radius:
             maximum_stim_radius = int(target_parameters["radius"])
-
-#     print("total objects count:" + str(total_objects_count))
-#     print("total distractors count:" + str(total_distractors_count))
-#     exit()
     
     max_cell_height = max_cell_width = 2 * maximum_stim_radius + spacer
 
@@ -117,6 +123,8 @@ def main():
         print("Total distractors:" + str(sum(total_distractors_count)))   
         print("Total objects:" + str(sum(total_objects_count)))
         print("Total loci" + str(total_loci))
+        print("horizontal offset = " + str(horizontal_offset))
+        print("verticle offset = " + str(verticle_offset))  
 #        print("Total objects var" + str(total_objects_count))
     # create the base_shape and coordinate matrices
     base_shape_matrix = []
@@ -128,7 +136,7 @@ def main():
 #            print("adding:" + str(object_types))
 #    print("num Spacers: " + str(num_spacers))
 
-     # now push on the spacers as value: -1
+    # now push on the spacers as value: -1
     for instances in range(num_spacers):
         base_shape_matrix.append(-1)
     
@@ -142,9 +150,6 @@ def main():
     
     # set up the x,y list
     coord_pair = []
-    
-    print("horizontal offset = " + str(horizontal_offset))
-    print("verticle offset = " + str(verticle_offset))    
     
     for mat_rows in range(objects_per_height):
         for mat_cols in range(objects_per_width):
@@ -164,6 +169,9 @@ def main():
     for j in range(stim_set_size):
         # we do this for a single stimuli (image)
         
+        # set the filename         
+        stim_file_name = str(base_config["base name"]) + "_" + str(j) + ".jpg" 
+        
         # duplicate the base_shape matrix, then shuffle it for this stimulus
         current_shape_matrix = base_shape_matrix[:]        
 
@@ -174,7 +182,7 @@ def main():
         random.shuffle(current_shape_matrix)
         # we've now got a new layout of distractors, and just need to add the target if it is present
         
-        # add in the distractor(s) NOTE: we do this now because we need to ensure it is placed correctly
+        # add in the distractor(s) NOTE: we do this now because we need to ensure it is placed correctly L or R
         if (target_present):
             # get a random row in the leftmost column
             first_col_cell = (random.randint(0,(objects_per_height -1)) * objects_per_width )
@@ -204,39 +212,42 @@ def main():
         image = Image.new( "RGB" , stim_size, str(base_config["bg colour"]))
         stim = ImageDraw.Draw(image)
         
-#         for i in range(len(current_shape_matrix)):
-#             if current_shape_matrix[i] > -1:
-#                 print current_shape_matrix[i]
-            #else:
-        
-#         print(str(current_shape_matrix))
-#         exit()
-        
-        # tmpcoords = coord_matrix[:]
-        
+        q = 0 # set this for an effective UID
         # loop through for each individual shape in the shape matrix
         for individual_shape in range(len(current_shape_matrix)):
             if current_shape_matrix[individual_shape] < 0:
                 pass # this is a spacer
             else:
+                q+=1
                 # pass on the centroid coordinates and shape_type to the draw_polygons function
-                print("individual shape:" + str(current_shape_matrix[individual_shape]))
-                print("size of coord_matrix = " + str(len(coord_matrix)) + " Size of distractor list: " + str(len(current_shape_matrix)))
-                paint_polygons(coord_matrix[individual_shape], distractor_list[current_shape_matrix[individual_shape]])
-            #    draw_grid(tmpcoords)
-        # this should have now drawn all the shapes on.
+                bound_list = paint_polygons(coord_matrix[individual_shape], distractor_list[current_shape_matrix[individual_shape]], stim_file_name)
                 
-        # set the filename and save the file to the appropriate path / name based on base name and current iteration        
-        stim_file_name = str(base_config["base name"]) + "_" + str(j) + ".jpg" 
+                # the polygons should now have been drawn, and we've got the coordinates in ver_list
+                # now we have the bounding box and want to write the relevant information to the file              
+                #get the type and get a unique name for it
+                
+                role = str(distractor_list[current_shape_matrix[individual_shape]]["role"])
+                name = role + "_" + str(q)
+                new_row_data = [stim_file_name, name, bound_list[0], bound_list[1], bound_list[2], bound_list[3] ]
+                outfile_handle.writerow(new_row_data)
+                                
+        # this should have now drawn all the shapes on.
         
+        # draw on the grid if you are that way inclined..
+        
+        if draw_on_grid == True:
+            draw_grid(coord_matrix)
+               
         # save the image  
         image.save(base_filepath + stim_file_name)
 
 
         # delete to save memory
         del image;
-
-    
+        
+    # close the ROI file
+    outfile_name.close()
+        
     print("Done")
     
     
@@ -299,29 +310,25 @@ def draw_grid(coord_list):
         print("drawn points: " + str(curr_point))
     
 
-def paint_polygons(shape_coordinates, shape_info):
-     
-    #stim.polygon(((0,0), (200,200), (0,200)), fill = shape_info["colour"], outline = shape_info["colour"])
-
-    # debugging: draw a green triangle 
-     
+def paint_polygons(shape_coordinates, shape_info, current_stim_name):
      
     # set up the vertex list
     vertices = []
      
-    # get some 
+    # get some variable handles
     poly_radius = int(shape_info["radius"  ])
     poly_vertices = int(shape_info["vertices"])
-    
+    poly_orientation = float(shape_info["orientation"])
+
     # calculate the internal angles
     internal_angle =  (2 * math.pi) / poly_vertices
      
     # create the list of vertices
-    for  i in range (int(shape_info["vertices"])):
+    for  i in range(poly_vertices):
         # create the points as pairs
          
-        xi = shape_coordinates[0] + math.ceil((poly_radius * math.sin( (i * internal_angle) + internal_angle /2.0)))
-        yi = shape_coordinates[1] + math.ceil((poly_radius * math.cos( (i * internal_angle)+ internal_angle / 2.0)))
+        xi = shape_coordinates[0] + math.ceil((poly_radius * math.sin( (i * internal_angle) + internal_angle /2.0 + poly_orientation)))
+        yi = shape_coordinates[1] + math.ceil((poly_radius * math.cos( (i * internal_angle)+ internal_angle / 2.0 + poly_orientation)))
          
         point_pair = (xi, yi)
          
@@ -332,25 +339,50 @@ def paint_polygons(shape_coordinates, shape_info):
     
     # make the vertices list a tuple
     vertex_list = tuple(vertices) 
-    print(vertex_list)
-#    print(shape_info["name"])
-    stim.polygon(vertex_list, fill = shape_info["colour"], outline = shape_info["colour"])
-         
-    return()
+    
+    if str(shape_info["fill"]) == "true":
+        stim.polygon(vertex_list, fill = shape_info["colour"], outline = shape_info["colour"])
+    else:
+        stim.polygon(vertex_list, outline = shape_info["colour"])
+
+    # write the derived AOI info to the file
+    rect_AOI_bounds = calculate_AOIs(vertex_list, shape_info, current_stim_name)
+    #return the rectangular AOI coordinates, passed on from calcAOIs function             
+    return(rect_AOI_bounds)
 
 
-# def write_AOIs(coord_list, shape_:
-#         # create a random coordinate bounded by min and max
-#             x1 = random.randint(0, (width - object_size));
-#             x2 = x1 + object_size
-#  
-#             y1 = random.randint(0, (height - object_size));
-#             y2 = y1 + object_size;
-#          
-#             if (fill):
-#                 stim.rectangle(((x1, y1),(x2,y2)), fill = shape_1_colour, outline = shape_1_colour)
-#             else:
-#                 stim.rectangle(((x1, y1),(x2,y2)), outline = shape_1_colour)
+def calculate_AOIs(coord_list, shape_info, stimulus_name):
+    
+    # loop through coordinate list to get the bounding box sizes from the dominating x,y coordinates:
+    # we don't have any idea where the shape will start, so we will initialise the extrema variables with max/min poss values
+
+    # calculate the bounding box:
+    min_x = coord_list[0][0]
+    max_x = 0
+    min_y = coord_list[0][1]
+    max_y = 0
+    
+    for c_pair in coord_list:
+        (this_x, this_y) = c_pair
+        if this_x < min_x:
+            min_x = this_x
+        elif this_x > max_x:
+            max_x = this_x
+        
+        if this_y < min_y:
+            min_y = this_y
+        elif this_y > max_y:
+            max_y = this_y
+        
+    bounding_coords = [min_x, min_y, max_x, max_y]
+    # now we have the bounding box
+        
+    #draw bounding boxes on for a laugh?
+    if draw_AOI_boxes == True:
+        stim.rectangle(bounding_coords, outline="black" )
+     
+    return(bounding_coords)   
+
 
 if ( __name__ == "__main__"):
     
