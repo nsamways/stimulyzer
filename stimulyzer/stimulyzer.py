@@ -9,38 +9,76 @@ from PIL import Image, ImageDraw
 
 from ConfigParser import ConfigParser
 
-import random, glob, math, os, csv 
+import random, glob, math, os, csv, sys 
 
 
 def main():
 
+
+   # print("The arguments are: ", str(sys.argv))
+    # process CLIs
+    
+    # set defaults
+    output_path = "z:\Stimuli"
+    
+    for i in range(len(sys.argv)):
+        
+        if "-o" in sys.argv[i]:
+            # set the output file
+            output_path = str(sys.argv[i+1])
+
+    # globals      
+    global outfile_handle
+
+    if not os.path.exists(output_path):
+        os.makedirs(output_path)
+    
+    # get a glob of .ini files
+    path = os.curdir
+    
+    config_files = glob.glob(os.path.join(path, '*.ini'))
+
+    write_path = output_path + "\AOIs.csv"
+    outfile_name = open(write_path,'wb') 
+    outfile_handle = csv.writer(outfile_name)
+
+    # make the handle global
+    # set up the headers
+    row_headers = ["stim_file_name","name","min_x","min_y","max_x","max_y"]
+    outfile_handle.writerow(row_headers)
+
+    for single_config in config_files:
+        process_set(single_config, output_path)
+
+    #close the outfile
+    outfile_name.close()
+
+    print("Completed.")
+    
+    
+def process_set(stimuli_config_file, output_dir):
+
     # toggle debugging mode
     global draw_AOI_boxes
     debugging = False
-    draw_AOI_boxes = True
-    draw_on_grid = True
+    draw_AOI_boxes = False
+    draw_on_grid = False
     
     # set some lists
     total_objects_count = []
     total_distractors_count = []
     
     # read in the config file as passed by CLAs
-    ( base_config, distractor_list, target_parameters ) = get_configuration()   
+    ( base_config, distractor_list, target_parameters ) = get_configuration(stimuli_config_file)   
 
     # convert some of the dict items to their proper type, and give sensible variable names for easier handling
     stim_width = int(base_config["width"])
     stim_height = int(base_config["height"])
     stim_set_size = int(base_config["number of stimuli"])
     spacer = int(base_config["padding"])
-    base_filepath = str(base_config["directory path"])
-
-    # open a file for writing out the AOI information
-    outfile_name = open((base_filepath + str(base_config["base name"]) + ".csv"),'wb') 
-    outfile_handle = csv.writer(outfile_name)
-
-    # set up the headers
-    row_headers = ["stim_file_name","name","min_x","min_y","max_x","max_y"]
-    outfile_handle.writerow(row_headers)
+    #base_filepath = str(base_config["directory path"])
+    base_filepath = output_dir
+   
     
     # check if there is a target present
     if bool(target_parameters):
@@ -166,7 +204,7 @@ def main():
     # NB: we have already added the target to the total_objects_count vector, so don't need to do this!
     
     # Main loop for creation of all stimuli        
-    for j in range(stim_set_size):
+    for j in range(1, (stim_set_size +1)):
         # we do this for a single stimuli (image)
         
         # set the filename         
@@ -239,16 +277,12 @@ def main():
             draw_grid(coord_matrix)
                
         # save the image  
-        image.save(base_filepath + stim_file_name)
+        image.save(os.path.join(base_filepath,stim_file_name))
 
 
         # delete to save memory
         del image;
-        
-    # close the ROI file
-    outfile_name.close()
-        
-    print("Done")
+
     
     
 def get_configuration( conf_filename = "config.ini" ):
