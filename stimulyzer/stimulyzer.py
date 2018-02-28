@@ -14,18 +14,30 @@ import random, glob, math, os, csv, sys
 
 def main():
 
+    # globals
+    global debugging
 
-   # print("The arguments are: ", str(sys.argv))
-    # process CLIs
     
     # set defaults
-    output_path = "z:\Stimuli"
-    
+    output_path = os.curdir
+    input_path = os.curdir    
+
+    debugging = False
+
     for i in range(len(sys.argv)):
         
         if "-o" in sys.argv[i]:
             # set the output file
             output_path = str(sys.argv[i+1])
+            
+        elif "-i" in sys.argv[i]:
+            # set the input_path
+            input_path = str(sys.argv[i+1])
+
+        elif "-d" in sys.argv[i]:
+            # set debugging mode
+            debugging = True
+
 
     # globals      
     global outfile_handle
@@ -33,12 +45,11 @@ def main():
     if not os.path.exists(output_path):
         os.makedirs(output_path)
     
-    # get a glob of .ini files
-    path = os.curdir
-    
-    config_files = glob.glob(os.path.join(path, '*.ini'))
+    # get a glob of .ini files from the input path
+ 
+    config_files = glob.glob(os.path.join(input_path, '*.ini'))
 
-    write_path = output_path + "\AOIs.csv"
+    write_path = os.path.join(output_path,"AOIs.csv")
     outfile_name = open(write_path,'wb') 
     outfile_handle = csv.writer(outfile_name)
 
@@ -60,9 +71,15 @@ def process_set(stimuli_config_file, output_dir):
 
     # toggle debugging mode
     global draw_AOI_boxes
-    debugging = False
-    draw_AOI_boxes = False
-    draw_on_grid = False
+    
+    if debugging:
+        draw_AOI_boxes = True
+        draw_on_grid = True
+
+    else:
+        draw_AOI_boxes = False
+        draw_on_grid = False
+
     
     # set some lists
     total_objects_count = []
@@ -77,8 +94,12 @@ def process_set(stimuli_config_file, output_dir):
     stim_set_size = int(base_config["number of stimuli"])
     spacer = int(base_config["padding"])
     #base_filepath = str(base_config["directory path"])
+    stim_base_name = os.path.splitext(os.path.basename(stimuli_config_file))[0]
     base_filepath = output_dir
    
+    if debugging:
+        print("stim_base_name:" + str(stim_base_name))
+        print("output_dir:" + str(output_dir))
     
     # check if there is a target present
     if bool(target_parameters):
@@ -208,7 +229,7 @@ def process_set(stimuli_config_file, output_dir):
         # we do this for a single stimuli (image)
         
         # set the filename         
-        stim_file_name = str(base_config["base name"]) + "_" + str(j) + ".jpg" 
+        stim_file_name = stim_base_name + "_" + str(j) + ".bmp" 
         
         # duplicate the base_shape matrix, then shuffle it for this stimulus
         current_shape_matrix = base_shape_matrix[:]        
@@ -237,7 +258,7 @@ def process_set(stimuli_config_file, output_dir):
                    
             elif ("right" in target_parameters["position"]):
                 # make sure the target is appended to the right.
-                target_place = first_col_cell + int(math.ceil(objects_per_width / 2.0))+ random.randint(0,col_adjust_size) + 1
+                target_place = first_col_cell + int(math.ceil(objects_per_width / 2.0))+ random.randint(0,col_adjust_size) 
                 current_shape_matrix.insert(target_place,(len(total_objects_count) -1))
                 #print("target right")
             else:
@@ -277,7 +298,7 @@ def process_set(stimuli_config_file, output_dir):
             draw_grid(coord_matrix)
                
         # save the image  
-        image.save(os.path.join(base_filepath,stim_file_name))
+        image.save(os.path.join(output_dir,stim_file_name))
 
 
         # delete to save memory
@@ -361,8 +382,8 @@ def paint_polygons(shape_coordinates, shape_info, current_stim_name):
     for  i in range(poly_vertices):
         # create the points as pairs
          
-        xi = shape_coordinates[0] + math.ceil((poly_radius * math.sin( (i * internal_angle) + internal_angle /2.0 + poly_orientation)))
-        yi = shape_coordinates[1] + math.ceil((poly_radius * math.cos( (i * internal_angle)+ internal_angle / 2.0 + poly_orientation)))
+        xi = shape_coordinates[0] + math.floor((poly_radius * math.sin( (i * internal_angle) + internal_angle /2.0 + poly_orientation)))
+        yi = shape_coordinates[1] + math.floor((poly_radius * math.cos( (i * internal_angle)+ internal_angle / 2.0 + poly_orientation)))
          
         point_pair = (xi, yi)
          
