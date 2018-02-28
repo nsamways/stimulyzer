@@ -229,7 +229,7 @@ def process_set(stimuli_config_file, output_dir):
         # we do this for a single stimuli (image)
         
         # set the filename         
-        stim_file_name = stim_base_name + "_" + str(j) + ".bmp" 
+        stim_file_name = stim_base_name + "_" + str(j) + ".jpg" 
         
         # duplicate the base_shape matrix, then shuffle it for this stimulus
         current_shape_matrix = base_shape_matrix[:]        
