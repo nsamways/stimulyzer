@@ -121,7 +121,7 @@ def process_set(stimuli_config_file, output_dir):
     
     for shapes in distractor_list:
         # get the size of current distractor
-        curr_radius = int(shapes["radius"])
+        curr_radius = float(shapes["radius"])
         total_distractors_count.append(int(shapes["number"])) 
         if  curr_radius > maximum_stim_radius:
             maximum_stim_radius = curr_radius
@@ -133,8 +133,8 @@ def process_set(stimuli_config_file, output_dir):
         # add targets to total count
         total_objects_count.append(int(target_parameters["number"])) 
         # check if the radius is bigger than targets
-        if int(target_parameters["radius"]) > maximum_stim_radius:
-            maximum_stim_radius = int(target_parameters["radius"])
+        if float(target_parameters["radius"]) > maximum_stim_radius:
+            maximum_stim_radius = float(target_parameters["radius"])
     
     max_cell_height = max_cell_width = 2 * maximum_stim_radius + spacer
 
@@ -371,7 +371,7 @@ def paint_polygons(shape_coordinates, shape_info, current_stim_name):
     vertices = []
      
     # get some variable handles
-    poly_radius = int(shape_info["radius"  ])
+    poly_radius = float(shape_info["radius"  ])
     poly_vertices = int(shape_info["vertices"])
     poly_orientation = float(shape_info["orientation"])
 
@@ -420,14 +420,14 @@ def calculate_AOIs(coord_list, shape_info, stimulus_name):
     for c_pair in coord_list:
         (this_x, this_y) = c_pair
         if this_x < min_x:
-            min_x = this_x
+            min_x = int(math.floor(this_x))
         elif this_x > max_x:
-            max_x = this_x
+            max_x = int(math.ceil(this_x))
         
         if this_y < min_y:
-            min_y = this_y
+            min_y = int(math.floor(this_y))
         elif this_y > max_y:
-            max_y = this_y
+            max_y = int(math.ceil(this_y))
         
     bounding_coords = [min_x, min_y, max_x, max_y]
     # now we have the bounding box
